@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pi Projector - Host</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { 
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
+      color:white; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif; 
+      height:100vh; 
+      overflow:hidden; 
+      display:flex; 
+      align-items:center; 
+      justify-content:center; 
+    }
+    
+    #waiting { 
+      text-align:center; 
+      animation:fadeIn 0.8s; 
+      max-width:70%; 
+      width:70%;
+      padding:2rem; 
+    }
+    
+    #waiting h1 { 
+      font-size:clamp(2rem,5vw,3rem); 
+      margin-bottom:1rem; 
+      background:linear-gradient(135deg,#3b82f6,#60a5fa); 
+      -webkit-background-clip:text; 
+      -webkit-text-fill-color:transparent; 
+      font-weight:800; 
+    }
+    
+    .subtitle {
+      color: #94a3b8;
+      font-size: clamp(1rem,2vw,1.2rem);
+      margin-bottom: 2rem;
+    }
+    
+    .access-info { 
+      background:rgba(15,23,42,0.9); 
+      backdrop-filter:blur(20px); 
+      border-radius:20px; 
+      padding:2rem; 
+      border:1px solid rgba(59,130,246,0.3); 
+      box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); 
+    }
+    
+    .code-section {
+      background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.1));
+      border: 2px solid rgba(16,185,129,0.4);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .code-label {
+      color: #94a3b8;
+      font-size: clamp(0.9rem,1.5vw,1.1rem);
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    
+    .access-code { 
+      font-size: clamp(2rem,6vw,3.5rem); 
+      font-weight: 900; 
+      background: linear-gradient(135deg,#10b981,#34d399); 
+      -webkit-background-clip: text; 
+      -webkit-text-fill-color: transparent; 
+      letter-spacing: 0.15em; 
+      margin: 0.5rem 0;
+      font-family: 'SF Mono', Monaco, monospace;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.95; transform: scale(1.01); }
+    }
+    
+    .url-display { 
+      font-size: clamp(1.2rem,2.5vw,1.6rem); 
+      font-weight: 600; 
+      color: #60a5fa; 
+      background: rgba(59,130,246,0.15); 
+      padding: 1rem; 
+      border-radius: 12px; 
+      margin: 1.5rem 0; 
+      border: 2px solid rgba(59,130,246,0.3); 
+      font-family: 'SF Mono', monospace; 
+    }
+    
+    .instructions { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+      gap: 1rem; 
+      margin-top: 1.5rem; 
+    }
+    
+    .instruction-step { 
+      background: rgba(59,130,246,0.1); 
+      padding: 1rem; 
+      border-radius: 10px; 
+      border-left: 3px solid #3b82f6; 
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .step-number { 
+      min-width: 32px;
+      height: 32px; 
+      background: #3b82f6; 
+      color: white; 
+      border-radius: 50%; 
+      display: flex;
+      align-items: center; 
+      justify-content: center; 
+      font-weight: 700; 
+      font-size: 1rem; 
+    }
+    
+    .step-text {
+      font-size: clamp(0.85rem,1.3vw,1rem);
+      line-height: 1.4;
+    }
+    
+    .step-text strong {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+    
+    .highlight {
+      color: #f59e0b;
+      font-weight: 700;
+    }
+    
+    .status-message {
+      color: #94a3b8;
+      font-size: clamp(0.9rem,1.4vw,1.1rem);
+      margin-top: 1rem;
+      font-style: italic;
+    }
+    
+    /* Video Container */
+    #container { 
+      display: none; 
+      width: 100vw; 
+      height: 100vh; 
+      background: #000; 
+      position: relative; 
+    }
+    
+    #video { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover;
+      background: #000; 
+    }
+    
+    .indicator { 
+      position: absolute; 
+      top: 20px; 
+      right: 20px; 
+      padding: 12px 24px; 
+      background: rgba(22,163,74,0.95); 
+      border-radius: 10px; 
+      font-weight: 600; 
+      font-size: 1rem;
+      display: none;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    
+    .indicator.show { 
+      display: block; 
+      animation: slideIn 0.5s; 
+    }
+    
+    .lost { 
+      position: absolute; 
+      top: 50%; 
+      left: 50%; 
+      transform: translate(-50%,-50%); 
+      background: rgba(220,38,38,0.95); 
+      padding: 30px 50px; 
+      border-radius: 12px; 
+      font-size: 1.5rem; 
+      font-weight: 600; 
+      display: none; 
+      z-index: 10;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    
+    .lost.show { display: block; }
+    
+    @keyframes fadeIn { 
+      from { opacity:0; transform:translateY(20px); } 
+      to { opacity:1; transform:translateY(0); } 
+    }
+    
+    @keyframes slideIn { 
+      from { opacity:0; transform:translateX(20px); } 
+      to { opacity:1; transform:translateX(0); } 
+    }
+  </style>
+</head>
+<body>
+  <div id="waiting">
+    <h1>Pi Projector Ready</h1>
+    <p class="subtitle">Wireless Screen Sharing Projector</p>
+    
+        
+      <div class="instructions">
+        <div class="instruction-step">
+          <div class="step-number">1</div>
+          <div class="step-text">
+            <strong>Connect to Projector WiFi</strong>
+            <h5>"Airtel_7581"</h5>
+
+          </div>
+        </div>
+        
+        <div class="instruction-step">
+          <div class="step-number">2</div>
+          <div class="step-text">
+            <strong>Visit URL</strong>
+            <h5>https://192.168.1.xxx:3000</h5>
+            <h5>accept the certificate warning</h5>
+          </div>
+        </div>
+        
+        <div class="instruction-step">
+          <div class="step-number">3</div>
+          <div class="step-text">
+            <strong>Enter Code</strong>
+            <strong>"T0-PiProjector"</strong>
+            </div>
+        </div>
+        
+        <div class="instruction-step">
+          <div class="step-number">4</div>
+          <div class="step-text">
+            <strong>Share Screen</strong>
+            Click "Share Screen"
+          </div>
+        </div>
+      </div>
+      
+      <p class="status-message" id="status-msg">Waiting for connections...</p>
+    </div>
+  </div>
+
+  <div id="container">
+    <video id="video" autoplay playsinline muted></video>
+    <div class="indicator" id="indicator">Connected</div>
+    <div class="lost" id="lost">Connection Lost</div>
+  </div>
+
+  <script src="/js/socket.io.min.js"></script>
+  <script>
+    const socket = io();
+    const room = "lab";
+    
+    const accessCodeEl = document.getElementById('access-code');
+    const codeDisplayEl = document.getElementById('code-display');
+    const statusMsgEl = document.getElementById('status-msg');
+    const waiting = document.getElementById('waiting');
+    const container = document.getElementById('container');
+    const video = document.getElementById('video');
+    const indicator = document.getElementById('indicator');
+    const lost = document.getElementById('lost');
+
+    let pc = null;
+    let stream = null;
+    let currentCode = 'LOADING...';
+
+    // Update display with code
+    function updateDisplay(code) {
+      currentCode = code;
+      accessCodeEl.textContent = code;
+      codeDisplayEl.textContent = code;
+      statusMsgEl.textContent = 'Ready to receive connections';
+      console.log('[HOST] Access code:', code);
+    }
+
+    // Socket connection
+    socket.on('connect', () => {
+      console.log('[HOST] Socket connected');
+      socket.emit('join-as-receiver');
+      statusMsgEl.textContent = 'PiProjector is ready - waiting for shared screen...';
+    });
+
+    // Receive code updates
+    socket.on('code-update', ({ code }) => {
+      console.log('[HOST] Code received:', code);
+      updateDisplay(code);
+    });
+
+    // Fallback: request code if not received
+    setTimeout(() => {
+      if (currentCode === 'LOADING...') {
+        console.log('[HOST] Code not received, requesting...');
+        socket.emit('request-code');
+      }
+    }, 2000);
+
+    // Hide code display when sharing starts
+    socket.on('sharing-started', () => {
+      console.log('[HOST] Sharing started');
+    });
+
+    // WebRTC setup
+    function setupPeerConnection() {
+      console.log('[WEBRTC] Setting up new peer connection (LAN ONLY)');
+      
+      if (pc) {
+        pc.close();
+      }
+
+      stream = new MediaStream();
+      video.srcObject = stream;
+
+      // Force local network only - no STUN
+      pc = new RTCPeerConnection({
+        iceServers: [],
+        iceTransportPolicy: 'all'
+      });
+      
+      // Debug ICE gathering
+      pc.onicegatheringstatechange = () => {
+        console.log('[WEBRTC] ICE gathering state:', pc.iceGatheringState);
+      };
+      
+      pc.onicecandidate = e => {
+        if (e.candidate) {
+          console.log('[WEBRTC] Host ICE candidate:', e.candidate.type);
+          socket.emit("ice-candidate", { room, candidate: e.candidate });
+        } else {
+          console.log('[WEBRTC] Host ICE gathering complete');
+        }
+      };
+      
+      // Try H.264 codec for better Pi compatibility
+      pc.addTransceiver('video', { 
+        direction: 'recvonly',
+        codecs: [
+          { mimeType: "video/H264", clockRate: 90000 },
+          { mimeType: "video/VP8", clockRate: 90000 }
+        ]
+      });
+      pc.addTransceiver('audio', { direction: 'recvonly' });
+
+      pc.ontrack = e => {
+        console.log('[WEBRTC] Track received:', e.track.kind);
+        stream.addTrack(e.track);
+        
+        if (e.track.kind === 'video') {
+          waiting.style.display = 'none';
+          container.style.display = 'block';
+          indicator.classList.add('show');
+          
+          video.play().catch(err => console.error('[VIDEO] Play error:', err));
+        }
+      };
+
+      pc.oniceconnectionstatechange = () => {
+        console.log('[WEBRTC] ICE:', pc.iceConnectionState);
+        if (pc.iceConnectionState === 'failed') lost.classList.add('show');
+        else if (pc.iceConnectionState === 'connected') lost.classList.remove('show');
+      };
+    }
+
+    socket.on('offer', async offer => {
+      console.log('[WEBRTC] Received offer');
+      setupPeerConnection();
+      
+      try {
+        await pc.setRemoteDescription(offer);
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        socket.emit('answer', { room, sdp: answer });
+      } catch (err) {
+        console.error('[WEBRTC] Error:', err);
+      }
+    });
+
+    socket.on('ice-candidate', async cand => {
+      if (pc && pc.signalingState !== 'closed') {
+        await pc.addIceCandidate(cand).catch(console.error);
+      }
+    });
+
+    socket.on('sharing-stopped', () => {
+      console.log('[WEBRTC] Sharing stopped');
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      if (pc) pc.close();
+      
+      // Return to waiting screen
+      container.style.display = 'none';
+      waiting.style.display = 'flex';
+      indicator.classList.remove('show');
+      lost.classList.remove('show');
+      statusMsgEl.textContent = 'Waiting for connections...';
+    });
+
+    socket.on('disconnect', () => {
+      statusMsgEl.textContent = 'Disconnected - reconnecting...';
+    });
+
+    console.log('[HOST] Pi Projector Host loaded');
+   
+
+// Fetch Pi's IP address dynamically
+async function getLocalIP() {
+    try {
+        const response = await fetch('/api/network-info');
+        const data = await response.json();
+        return data.ip;
+    } catch (err) {
+        console.error('Failed to get IP:', err);
+        return '192.168.1.101'; // Fallback
+    }
+}
+
+// Update URL display on page load
+window.addEventListener('DOMContentLoaded', async () => {
+    const ip = await getLocalIP();
+    const port = window.location.port || '3000';
+    const url = `https://${ip}:${port}`;
+    
+    // Update the instruction step
+    document.querySelector('.instruction-step:nth-child(2) h5').textContent = url;
+});
+
+  </script>
+</body>
+</html>

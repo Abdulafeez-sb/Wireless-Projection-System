@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Screen Share Client</title>
+  <style>
+    :root { 
+      --card-bg: rgba(255,255,255,0.95); 
+      --accent: #3b82f6; 
+      --muted: #6b7280; 
+    }
+    html,body { height:100%; margin:0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif; }
+    body { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+      display:flex; 
+      align-items:center; 
+      justify-content:center; 
+      padding:20px; 
+    }
+    .card { 
+      width:380px; 
+      max-width:100%; 
+      background:var(--card-bg); 
+      border-radius:16px; 
+      box-shadow:0 20px 60px rgba(0,0,0,0.3); 
+      padding:30px; 
+      backdrop-filter:blur(10px); 
+    }
+    .logo { 
+      width:60px; 
+      height:60px; 
+      margin:0 auto 20px; 
+      background:linear-gradient(135deg,var(--accent),#60a5fa); 
+      border-radius:16px; 
+      display:grid; 
+      place-items:center; 
+      color:white; 
+      font-size:30px; 
+    }
+    h1 { font-size:24px; margin:0 0 8px; text-align:center; }
+    p.lead { margin:0 0 24px; color:var(--muted); font-size:14px; text-align:center; }
+    .btn { 
+      width:100%; 
+      padding:14px; 
+      border-radius:10px; 
+      border:0; 
+      font-weight:600; 
+      font-size:16px; 
+      cursor:pointer; 
+      background:linear-gradient(90deg,var(--accent),#2563eb); 
+      color:white; 
+      box-shadow:0 6px 20px rgba(59,130,246,0.4); 
+      transition:transform 0.2s; 
+    }
+    .btn:hover { transform:translateY(-2px); }
+    .btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+    .btn.secondary { 
+      background:#f1f5f9; 
+      color:#64748b; 
+      box-shadow:none; 
+      margin-top:10px; 
+    }
+    .status { 
+      margin-top:16px; 
+      padding:12px; 
+      background:#ecfeff; 
+      border-radius:8px; 
+      text-align:center; 
+      font-size:14px; 
+      color:#0e7490; 
+      display:none; 
+    }
+    .alert { 
+      margin-top:12px; 
+      padding:12px; 
+      background:#fee2e2; 
+      border-radius:8px; 
+      font-size:13px; 
+      color:#dc2626; 
+      display:none; 
+    }
+    
+    /* Authentication Overlay */
+    #overlay { 
+      position:fixed; 
+      inset:0; 
+      background:rgba(0,0,0,0.9); 
+      display:flex; 
+      align-items:center; 
+      justify-content:center; 
+      z-index:999; 
+      backdrop-filter:blur(10px); 
+    }
+    #overlay.hidden { display:none; }
+    
+    #overlay-box { 
+      background:white; 
+      padding:40px; 
+      border-radius:20px; 
+      text-align:center; 
+      box-shadow:0 25px 70px rgba(0,0,0,0.6); 
+      max-width:90%; 
+      border: 2px solid rgba(59,130,246,0.3);
+    }
+    
+    #overlay h2 {
+      font-size: 24px;
+      margin: 0 0 12px;
+      color: #1e293b;
+    }
+    
+    #overlay p {
+      color: #64748b;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+    
+    #overlay input { 
+      padding:14px 20px; 
+      border-radius:10px; 
+      border:2px solid #e2e8f0; 
+      font-size:18px; 
+      margin-top:16px; 
+      width:240px; 
+      text-align:center; 
+      font-weight:700;
+      letter-spacing:0.05em;
+      font-family:'SF Mono',monospace;
+      transition:all 0.3s;
+    }
+    
+    #overlay input:focus {
+      outline:none;
+      border-color:#3b82f6;
+      box-shadow:0 0 0 3px rgba(59,130,246,0.1);
+    }
+    
+    #overlay button { 
+      margin-top:20px; 
+      padding:14px 40px; 
+      border:none; 
+      border-radius:10px; 
+      background:linear-gradient(135deg,#3b82f6,#2563eb); 
+      color:white; 
+      font-weight:700; 
+      cursor:pointer; 
+      font-size:16px; 
+      transition:all 0.3s;
+      box-shadow:0 6px 20px rgba(59,130,246,0.4);
+    }
+    
+    #overlay button:hover {
+      transform:translateY(-2px);
+      box-shadow:0 8px 25px rgba(59,130,246,0.5);
+    }
+    
+    #overlay button:disabled { 
+      opacity:0.6; 
+      cursor:not-allowed; 
+      transform:none; 
+    }
+    
+    #error-msg { 
+      color:#dc2626; 
+      font-size:14px; 
+      margin-top:16px; 
+      font-weight:500;
+      display:none; 
+      background:#fee2e2;
+      padding:10px;
+      border-radius:8px;
+    }
+    
+    .rate-limit { 
+      background:rgba(220,38,38,0.1) !important; 
+      border-color:#dc2626 !important; 
+    }
+  </style>
+</head>
+<body>
+  <!-- Authentication Overlay -->
+  <div id="overlay">
+    <div id="overlay-box">
+      <h2>Enter Access Code</h2>
+      <p>Check the projector screen for the access code</p>
+      <input type="text" id="accessCode" placeholder="Input access-code" maxlength="20" autocomplete="off" />
+      <br><button id="submitCode">Unlock & Continue</button>
+      <div id="error-msg"></div>
+    </div>
+  </div>
+
+  <!-- Main Card -->
+  <div class="card">
+    <div class="logo">&#128241;&#8594;&#128250;</div>
+    <h1>Screen Sharing</h1>
+    <p class="lead">Share your screen wirelessly to the projector</p>
+    
+    <button id="shareBtn" class="btn">Share Screen</button>
+    <button id="stopBtn" class="btn secondary" style="display:none">Stop Sharing</button>
+    
+    <div class="alert" id="errorAlert"></div>
+    <div class="status" id="statusRow">Sharing active</div>
+  </div>
+
+  <script src="/js/socket.io.min.js"></script>
+  <script>
+    let isAuthenticated = false;
+    const socket = io();
+    const room = "lab";
+
+    // Elements
+    const overlay = document.getElementById('overlay');
+    const accessCodeInput = document.getElementById('accessCode');
+    const submitCodeBtn = document.getElementById('submitCode');
+    const errorMsg = document.getElementById('error-msg');
+    const shareBtn = document.getElementById('shareBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const statusRow = document.getElementById('statusRow');
+    const errorAlert = document.getElementById('errorAlert');
+
+    // Auto-focus on code input
+    accessCodeInput.focus();
+
+    // Authentication logic
+    submitCodeBtn.onclick = async () => {
+      const code = accessCodeInput.value.trim();
+      
+      if (!code) {
+        showOverlayError('Please enter the access code');
+        return;
+      }
+      
+      const btn = submitCodeBtn;
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Validating...';
+
+      try {
+        const res = await fetch('/validate-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        });
+
+        const result = await res.json();
+
+        if (res.status === 429) {
+          showOverlayError('Too many attempts. Please wait 5 minutes.');
+          overlay.querySelector('#overlay-box').classList.add('rate-limit');
+          return;
+        }
+
+        if (result.valid) {
+          isAuthenticated = true;
+          overlay.classList.add('hidden');
+          console.log('[CLIENT] Authentication successful');
+        } else {
+          showOverlayError(result.message || 'Incorrect code. Check projector screen.');
+          accessCodeInput.value = '';
+          accessCodeInput.focus();
+        }
+      } catch (err) {
+        showOverlayError('Connection error. Check WiFi connection.');
+      }
+      
+      btn.disabled = false;
+      btn.textContent = originalText;
+    };
+
+    accessCodeInput.onkeydown = e => {
+      if (e.key === 'Enter') {
+        submitCodeBtn.click();
+      }
+    };
+
+    function showOverlayError(msg) {
+      errorMsg.textContent = msg;
+      errorMsg.style.display = 'block';
+      setTimeout(() => {
+        errorMsg.style.display = 'none';
+        overlay.querySelector('#overlay-box').classList.remove('rate-limit');
+      }, 5000);
+    }
+
+    // WebRTC logic
+    let pc = new RTCPeerConnection({
+      iceServers: [],
+      iceTransportPolicy: 'all'
+    });
+
+    pc.onicegatheringstatechange = () => {
+      console.log('[WEBRTC] Client ICE gathering state:', pc.iceGatheringState);
+    };
+
+    pc.onicecandidate = e => {
+      if (e.candidate) {
+        console.log('[WEBRTC] Client ICE candidate:', e.candidate.type);
+        socket.emit("ice-candidate", { room, candidate: e.candidate });
+      } else {
+        console.log('[WEBRTC] Client ICE gathering complete');
+      }
+    };
+    
+    pc.oniceconnectionstatechange = () => {
+      console.log('[WEBRTC] Client ICE state:', pc.iceConnectionState);
+    };
+
+    // Share Screen
+    shareBtn.onclick = async () => {
+      if (!isAuthenticated) {
+        showError('Please authenticate first');
+        return;
+      }
+
+      try {
+        shareBtn.disabled = true;
+        shareBtn.textContent = "Starting...";
+
+        const stream = await navigator.mediaDevices.getDisplayMedia({ 
+          video: { width: 1920, height: 1080, frameRate: 30 },
+          audio: false
+        });
+
+        stream.getTracks().forEach(track => pc.addTrack(track, stream));
+
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        socket.emit("offer", { room, sdp: offer });
+
+        shareBtn.style.display = "none";
+        stopBtn.style.display = "block";
+        statusRow.style.display = "block";
+
+        stream.getVideoTracks()[0].onended = () => stopSharing();
+        
+        console.log('[CLIENT] Sharing started');
+      } catch (err) {
+        showError("Failed: " + (err.message || "Try again"));
+        shareBtn.disabled = false;
+        shareBtn.textContent = "Share Screen";
+      }
+    };
+
+    stopBtn.onclick = stopSharing;
+
+    function stopSharing() {
+      pc.getSenders().forEach(s => s.track?.stop());
+      pc.close();
+      socket.emit('stop-sharing');
+      
+      console.log('[CLIENT] Sharing stopped - refreshing page...');
+      
+      // Refresh page to return to authentication screen
+      setTimeout(() => {
+        location.reload();
+      }, 500);
+    }
+
+    function showError(msg) {
+      errorAlert.textContent = msg;
+      errorAlert.style.display = "block";
+      setTimeout(() => errorAlert.style.display = "none", 5000);
+    }
+
+    // Socket events
+    socket.emit("join", room);
+    
+    socket.on("answer", async ans => {
+      if (pc.signalingState !== 'closed') await pc.setRemoteDescription(ans);
+    });
+    
+    socket.on("ice-candidate", async cand => {
+      if (pc.signalingState !== 'closed') await pc.addIceCandidate(cand).catch(console.error);
+    });
+
+    socket.on('error', ({ message }) => {
+      showError(message);
+    });
+
+    console.log('[CLIENT] Screen Share Client loaded');
+  </script>
+</body>
+</html>
