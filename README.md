@@ -29,7 +29,11 @@ A cost-effective wireless projection interface that lets users share their lapto
 - Node.js 16+ and npm
 - OpenSSL (for certificate generation)
 
+⚠️ Prerequisites: Fresh Raspberry Pi Setup
+If you're setting up a brand new Raspberry Pi or need to reflash your microSD card, please complete the OS installation first:
+Follow this complete guide from downloading the OS to getting your Pi ready for the Wireless Projection System. [Raspberry Pi OS Installation Guide]( )
 
+Once your Pi is booted and configured, return here and continue with Step 1 below.
 
 ## Installation & Setup
 ### Open the terminal on the Raspberry Pi
