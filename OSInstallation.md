@@ -5,7 +5,7 @@ This guide walks you through installing Raspberry Pi OS on a fresh microSD card 
 
 ---
 
-## 📋 What You'll Need
+##  What You'll Need
 
 ### Hardware
 - Raspberry Pi (3B+, 4, or 5 recommended)
@@ -13,16 +13,14 @@ This guide walks you through installing Raspberry Pi OS on a fresh microSD card 
 - MicroSD card reader (USB adapter for your computer)
 - Computer (Windows, Mac, or Linux)
 - Power supply for Raspberry Pi (5V/3A USB-C for Pi 4/5)
-- HDMI cable and monitor (for initial setup)
-- USB keyboard and mouse (for initial setup)
+- HDMI cable and monitor (for initial setup) or USB-C cable connected to Laptop
 
 ### Optional but Recommended
-- Ethernet cable (for faster initial setup)
 - Case with cooling (fan and heatsinks)
 
 ---
 
-## 🚀 Step-by-Step Installation
+##  Step-by-Step Installation
 
 ### Step 1: Download Raspberry Pi Imager
 
@@ -32,7 +30,7 @@ This guide walks you through installing Raspberry Pi OS on a fresh microSD card 
 2. **Download Raspberry Pi Imager** for your operating system:
    - **Windows**: Click "Download for Windows"
    - **macOS**: Click "Download for macOS"
-   - **Linux**: Click "Download for Ubuntu" (or use command below)
+   - **Linux**: Click "Download for Ubuntu"
 
 3. **Install Raspberry Pi Imager**:
    - **Windows**: Run the `.exe` file and follow installation wizard
@@ -111,11 +109,8 @@ This guide walks you through installing Raspberry Pi OS on a fresh microSD card 
 1. **Insert microSD card** into Raspberry Pi slot (bottom of the board)
 
 2. **Connect peripherals**:
-   - HDMI cable to monitor
-   - USB keyboard
-   - USB mouse
-   - Ethernet cable (optional but recommended for first boot)
-
+   - microHDMI to HDMI cable to monitor
+   
 3. **Power on the Pi**:
    - Connect USB-C power supply
    - Red LED: Power indicator (solid)
@@ -128,7 +123,7 @@ This guide walks you through installing Raspberry Pi OS on a fresh microSD card 
 
 ---
 
-### Step 5: Initial Configuration (If Not Done in Imager)
+### Step 5: Initial Configuration (IF NOT DONE IN IMAGER !!!)
 
 If you skipped OS settings in Step 3, you'll see a setup wizard:
 
@@ -156,7 +151,7 @@ If you skipped OS settings in Step 3, you'll see a setup wizard:
 6. **Update Software**:
    - Click "Next" to update (recommended)
    - Or "Skip" to update later
-   - Wait for updates to complete (10-20 minutes)
+   - Wait for updates to complete (5-15 minutes)
 
 7. **Restart**:
    - Click "Restart" when prompted
@@ -186,63 +181,7 @@ This may take 15-30 minutes depending on your internet speed.
 
 ---
 
-### Step 7: Configure SSH Access (For Remote Setup)
-
-If you need to access the Pi remotely:
-
-1. **Enable SSH** (if not enabled during imaging):
-   ```bash
-   sudo raspi-config
-   ```
-   - Navigate to: `Interface Options` → `SSH` → `Yes`
-   - Select `Finish`
-
-2. **Find your Pi's IP address**:
-   ```bash
-   hostname -I
-   ```
-   Example output: `192.168.1.102`
-
-3. **Test SSH connection from another computer**:
-   
-   **Windows (using PuTTY)**:
-   - Open PuTTY
-   - Hostname: `192.168.1.102` (your Pi's IP)
-   - Port: `22`
-   - Click "Open"
-   
-   **Mac/Linux (using Terminal)**:
-   ```bash
-   ssh pi@192.168.1.102
-   ```
-
-4. **Login**:
-   - Username: `pi`
-   - Password: Your Pi password
-
----
-
-### Step 8: Install Essential Tools
-
-```bash
-# Install useful utilities
-sudo apt install -y git vim nano htop
-
-# Install network tools (useful for troubleshooting)
-sudo apt install -y net-tools arp-scan
-
-# Verify Node.js installation (should already be included)
-node --version
-npm --version
-
-# If Node.js is not installed or outdated, install it:
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install -y nodejs
-```
-
----
-
-### Step 9: Configure Display Settings (For Projector Use)
+### Step 7: Configure Display Settings (For Projector Use)
 
 Set optimal display settings for projector output:
 
@@ -265,7 +204,7 @@ Navigate to:
 
 ---
 
-### Step 10: Install Browser for Kiosk Mode
+### Step 8: Install Browser for Kiosk Mode
 
 Install Brave Browser (recommended - no session restore prompts):
 
@@ -293,7 +232,7 @@ sudo apt install -y chromium-browser
 
 ---
 
-### Step 11: Optimize for Performance
+### Step 9: Optimize for Performance
 
 Apply optimizations for better projection performance:
 
@@ -305,103 +244,6 @@ sudo raspi-config
 - Set to: `256` MB
 - Select `Finish` → `Reboot`
 
-**Optional: Overclock (Pi 4 only - use with adequate cooling)**:
-```bash
-sudo nano /boot/config.txt
-```
-Add at the end:
-```
-# Mild overclock for Pi 4
-over_voltage=2
-arm_freq=1750
-```
-Save: `Ctrl+X` → `Y` → `Enter`
-
-⚠️ **Warning**: Only overclock if you have proper cooling (fan + heatsinks)
-
----
-
-### Step 12: Configure Static IP (Recommended)
-
-Set a static IP so the projector URL doesn't change:
-
-```bash
-# Find your current network details
-ip route | grep default
-# Note your gateway (e.g., 192.168.1.1)
-
-# Edit dhcpcd configuration
-sudo nano /etc/dhcpcd.conf
-```
-
-Add at the end (adjust for your network):
-```bash
-# Static IP configuration for wireless projection
-interface wlan0
-static ip_address=192.168.1.102/24
-static routers=192.168.1.1
-static domain_name_servers=192.168.1.1 8.8.8.8
-```
-
-**For Ethernet (if using)**:
-```bash
-interface eth0
-static ip_address=192.168.1.102/24
-static routers=192.168.1.1
-static domain_name_servers=192.168.1.1 8.8.8.8
-```
-
-Save: `Ctrl+X` → `Y` → `Enter`
-
-**Reboot to apply**:
-```bash
-sudo reboot
-```
-
-**Verify static IP**:
-```bash
-hostname -I
-# Should show: 192.168.1.102
-```
-
----
-
-### Step 13: Verify System is Ready
-
-Run these checks before proceeding:
-
-```bash
-# Check Node.js
-node --version
-npm --version
-
-# Check network connectivity
-ping -c 3 google.com
-
-# Check SSH access (from another device)
-# ssh pi@192.168.1.102
-
-# Check display output
-tvservice -s
-# Should show: HDMI mode with resolution
-
-# Check available disk space
-df -h
-# /dev/root should have 10GB+ available
-```
-
----
-
-## ✅ System Ready!
-
-Your Raspberry Pi is now fully configured with:
-- ✅ Raspberry Pi OS installed and updated
-- ✅ SSH enabled for remote access
-- ✅ Static IP configured
-- ✅ Browser installed (Brave or Chromium)
-- ✅ Display optimized for projector
-- ✅ Node.js ready for server installation
-
 ---
 
 ## 🔗 Next Steps
@@ -410,98 +252,11 @@ Your Raspberry Pi is now fully configured with:
 
 Continue with the main setup guide:
 
-👉 **[Go to Main Installation Guide (Step 1)](README.md#step-1-install-nodejs-and-dependencies)**
+**[Go to Main Installation Guide (Step 1)](README.md#step-1-install-nodejs-and-dependencies)**
 
 Or if viewing on GitHub:
 
-👉 **[Main README - Installation Steps](https://github.com/Abdulafeez-sb/Wireless-Projection-System#installation--setup)**
-
----
-
-## 🔧 Troubleshooting
-
-### Cannot Boot / No Display
-
-**Problem**: Pi won't boot or monitor shows no signal
-
-**Solution**:
-1. **Check power supply**: Must provide 5V/3A (15W) minimum
-2. **Re-flash SD card**: Card may be corrupted
-3. **Try different HDMI cable/port**: Some monitors are picky
-4. **Check SD card is fully inserted**: Should click into place
-5. **Try safe mode**: Hold SHIFT during boot
-
----
-
-### WiFi Not Connecting
-
-**Problem**: Pi can't connect to WiFi
-
-**Solution**:
-1. **Check WiFi credentials** in Imager settings or setup wizard
-2. **Verify WiFi country** is set correctly:
-   ```bash
-   sudo raspi-config
-   # Localisation Options → WLAN Country
-   ```
-3. **Check router compatibility**: Pi 3/4 support 2.4GHz and 5GHz
-4. **Use Ethernet temporarily** to troubleshoot
-
----
-
-### "Failed to Start X Server" Error
-
-**Problem**: Desktop won't load
-
-**Solution**:
-```bash
-# Reconfigure display
-sudo raspi-config
-# System Options → Boot / Auto Login → Desktop Autologin
-
-# Or boot to command line and fix:
-sudo systemctl restart lightdm
-```
-
----
-
-### Slow Performance
-
-**Problem**: Pi is laggy or slow
-
-**Solution**:
-1. **Increase GPU memory** (Step 11)
-2. **Close unnecessary programs**
-3. **Use lighter desktop**: Consider Raspberry Pi OS Lite + manual GUI install
-4. **Check SD card speed**: Use Class 10 or UHS-I minimum
-5. **Monitor temperature**:
-   ```bash
-   vcgencmd measure_temp
-   # Should be below 80°C
-   ```
-
----
-
-### SSH Connection Refused
-
-**Problem**: Cannot SSH into Pi
-
-**Solution**:
-1. **Verify SSH is enabled**:
-   ```bash
-   sudo systemctl status ssh
-   # Should show: active (running)
-   ```
-2. **Enable SSH if disabled**:
-   ```bash
-   sudo systemctl enable ssh
-   sudo systemctl start ssh
-   ```
-3. **Check firewall** (if configured):
-   ```bash
-   sudo ufw allow 22/tcp
-   ```
-4. **Verify IP address**: May have changed if not static
+**[Main README - Installation Steps](https://github.com/Abdulafeez-sb/Wireless-Projection-System#installation--setup)**
 
 ---
 
@@ -540,7 +295,7 @@ sudo rpi-update           # Update firmware (use carefully)
 
 ---
 
-## 📖 Additional Resources
+##  Additional Resources
 
 - **Official Raspberry Pi Documentation**: https://www.raspberrypi.com/documentation/
 - **Raspberry Pi Forums**: https://forums.raspberrypi.com/
@@ -549,10 +304,10 @@ sudo rpi-update           # Update firmware (use carefully)
 
 ---
 
-## 🆘 Need More Help?
+##  Need More Help?
 
 If you encounter issues not covered here:
-1. Check the [Main README Troubleshooting](README.md#-troubleshooting) section
+1. Check the [Main README](README.md#-troubleshooting) section
 2. Search Raspberry Pi Forums for your specific error
 3. Verify your SD card is genuine and not corrupted
 4. Try re-flashing with a different SD card
