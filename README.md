@@ -1,0 +1,2 @@
+# Design-and-Implementation-of-a-Secure-WebRTC-Based-Wireless-Projection-System
+A repository  of my project: To build a cost-effective and secure wireless projection interface using Raspberry Pi, optimized for users to connect their laptops to a projector without using cables. The system uses Web Real-Time Communication (WebRTC) technology to let users share their screens directly from a web browser.
