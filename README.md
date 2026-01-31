@@ -31,7 +31,7 @@ A cost-effective wireless projection interface that lets users share their lapto
 
 ⚠️ Prerequisites: Fresh Raspberry Pi Setup
 If you're setting up a brand new Raspberry Pi or need to reflash your microSD card, please complete the OS installation first:
-Follow this complete guide from downloading the OS to getting your Pi ready for the Wireless Projection System. [Raspberry Pi OS Installation Guide]( )
+Follow this complete guide from downloading the OS to getting your Pi ready for the Wireless Projection System. [Raspberry Pi OS Installation Guide](https://github.com/Abdulafeez-sb/Wireless-Projection-System/blob/main/OSInstallation.md)
 
 Once your Pi is booted and configured, return here and continue with Step 1 below.
 
